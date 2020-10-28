@@ -149,7 +149,6 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
 	@Override
 	public synchronized String start(long sessionKey) throws RemoteException, AuthException {
 		String user = checkUser(sessionKey);
-		System.out.println("Starting printer");
 		online = true;
 		
 		String lEntry = user + "; start";
@@ -167,7 +166,6 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
 				}
 			}
 		}
-		System.out.println("Stopping printer");
 		online = false;
 		for(String printer : printQueue.keySet()) {
 			printQueue.get(printer).clear();
@@ -281,7 +279,6 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
 		if(!user.equals("admin")) {
 			throw new AuthException("only admin can end protected jobs");
 		}
-		System.out.println("Stopping printer");
 		online = false;
 		for(String printer : printQueue.keySet()) {
 			printQueue.get(printer).clear();
