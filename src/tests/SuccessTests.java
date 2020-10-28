@@ -245,11 +245,11 @@ class SuccessTests{
 		printServer.stopProtected(sessionKey);
 		printServer.start(sessionKey);
 		printServer.restart(sessionKey);
-		printServer.stop(sessionKey);
 		List<String> log = printServer.getLog(sessionKey);
 		
-		String[] excpected = {"admin; print; printer1; file1.txt",
-							  "admin; printProtected; printer1; file2",
+		String[] excpected = {"admin; wipeLog",
+							  "admin; print; printer1; file1.txt",
+							  "admin; printProtected; printer1; file2.txt",
 							  "admin; queue; printer1",
 							  "admin; abort; printer1; file1.txt",
 							  "admin; setConfig; fast; true",
@@ -258,8 +258,8 @@ class SuccessTests{
 							  "admin; topQueue; printer1; file1.txt",
 							  "admin; stopProtected",
 							  "admin; start",
-							  "admin; restart",
-							  "admin; stop"};
+							  "admin; stop",
+							  "admin; start"};
 		
 		for(int i = 0; i < excpected.length; i++) {
 			assertEquals(excpected[i],log.get(i));

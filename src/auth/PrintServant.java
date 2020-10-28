@@ -69,7 +69,9 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
 		//"np" for not-protected
 		String[] entry = {user,filename,"np"};
 		printQueue.get(printer).add(entry);
-		//String
+		
+		String lEntry = user + "; print; " + printer + "; " + filename;
+		log.add(lEntry);
 		return "job added to printer";
 	}
 
@@ -81,6 +83,9 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
 		//"np" for not-protected
 		String[] entry = {user,filename,"p"};
 		printQueue.get(printer).add(entry);
+		
+		String lEntry = user + "; printProtected; " + printer + "; " + filename;
+		log.add(lEntry);
 		return "job added to printer";
 	}
 
@@ -90,6 +95,9 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
 		String user = checkUser(sessionKey);
 		List<String[]> queue = printQueue.get(printer);
 		String[] removed = queue.remove(job);
+		
+		String lEntry = user + "; abort; " + printer + "; " + removed[1];
+		log.add(lEntry);
 		return "Job " + removed[1] + " removed from " + printer;
 	}
 
@@ -107,6 +115,9 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
 				queue.add(elem);
 			}
 		}
+		
+		String lEntry = user + "; queue; " + printer;
+		log.add(lEntry);
 		return queue;
 	}
 
@@ -123,6 +134,10 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
 				break;
 			}
 		}
+		
+		String lEntry = user + "; topQueue; " + printer + "; " + queue.get(job)[1];
+		log.add(lEntry);
+		
 		if(index < job) {
 			Collections.swap(queue, index, job);
 			return "Job swapped with job at position " + String.valueOf(index); 
@@ -136,6 +151,9 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
 		String user = checkUser(sessionKey);
 		System.out.println("Starting printer");
 		online = true;
+		
+		String lEntry = user + "; start";
+		log.add(lEntry);
 		return "Printer started";
 	}
 
@@ -154,6 +172,9 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
 		for(String printer : printQueue.keySet()) {
 			printQueue.get(printer).clear();
 		}
+		
+		String lEntry = user + "; stop";
+		log.add(lEntry);
 		return "Printer stopped";
 	}
 
@@ -162,6 +183,8 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
 		String user = checkUser(sessionKey);
 		stop(sessionKey);
 		start(sessionKey);
+		
+		//accountability ensure by start and stop
 		return "Printer restarted";
 	}
 
@@ -181,6 +204,9 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
 		String message = "Running : " + String.valueOf(runs) + "; " +
 						 "NextJob : " + nextJob + "; " + 
 						 "QueueSize : " + String.valueOf(qSize);
+		
+		String lEntry = user + "; status; " + printer;
+		log.add(lEntry);
 		return message;
 	}
 
@@ -188,6 +214,9 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
 	public synchronized String readConfig(String parameter, long sessionKey) throws RemoteException, AuthException, DisabledException {
 		checkOnline();
 		String user = checkUser(sessionKey);
+		
+		String lEntry = user + "; readConfig; " + parameter;
+		log.add(lEntry);
 		return config.get(parameter);
 	}
 
@@ -196,14 +225,23 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
 		checkOnline();
 		String user = checkUser(sessionKey);
 		config.put(parameter, value);
+		
+		String lEntry = user + "; setConfig; " + parameter + "; " + value;
+		log.add(lEntry);
 		return "Parameter " + parameter + " set to " + value;
 	}
 
 	@Override
 	public synchronized String shutdown(long sessionKey) throws RemoteException, AuthException {
 		String user = checkUser(sessionKey);
+		if(!user.equals("admin")) {
+			throw new AuthException("only admin can end protected jobs");
+		}
 		shutdown = true;
-		return null;
+		
+		String lEntry = user + "; shutdown";
+		log.add(lEntry);
+		return "Server hard shut down";
 	}
 
 	@Override
@@ -231,6 +269,9 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
 		} catch (RemoteException | UnknownHostException | NotBoundException e) {
 			e.printStackTrace();
 		}
+		
+		String lEntry = username + "; login";
+		log.add(lEntry);
 		return "successfully started session with " + username;
 	}
 
@@ -245,6 +286,9 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
 		for(String printer : printQueue.keySet()) {
 			printQueue.get(printer).clear();
 		}
+		
+		String lEntry = user + "; stopProtected";
+		log.add(lEntry);
 	}
 
 	@Override
@@ -253,6 +297,9 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
 		if(!user.equals("admin")) {
 			throw new AuthException("only admin can end protected jobs");
 		}
+		
+		String lEntry = user + "; getLog";
+		log.add(lEntry);
 		return log;
 	}
 
@@ -263,5 +310,7 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
 			throw new AuthException("only admin can end protected jobs");
 		}
 		log.clear();
+		String lEntry = user + "; wipeLog";
+		log.add(lEntry);
 	}
 }
