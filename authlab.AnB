@@ -1,0 +1,36 @@
+Protocol: authlab
+
+Types: Agent A,s,B;
+       Number SessionKey,Data,Request,Nonce,Nonce2;
+       Function exy,pw,pk;
+
+Knowledge: 
+       A: A,B,s,pw(A,s),exy(A,s),pk(s),pk(B);
+       B: B,s,pk(B),inv(pk(B)),pk(s);
+       s: s,A,B,pk(s),inv(pk(s)),pw(A,s),pk(B),exy(A,s);
+       where B!=s
+
+Actions:
+
+#send password over secure connection
+A->s:  {| A,B,pw(A,s),Nonce |}exy(A,s)
+#generate session key
+s->A: {| SessionKey,Nonce |}exy(A,s)
+#send session key to B
+A->B: { SessionKey, A }pk(B)
+#ask if sessionkey is valid
+B->s: { { Nonce2,A,B,SessionKey }inv(pk(B)) }pk(s)
+#confirm that key is valid
+s->B: { { A,B,Nonce2 }inv(pk(s)) }pk(B)
+#confirm that client has been accepted
+B->A: { A,B,s }inv(pk(B))
+#send request and data
+A->B: { Request,Data,SessionKey }pk(B)
+
+Goals:
+
+B authenticates A on Request
+Data secret between B,A
+pw(A,s) guessable secret between A,s
+
+
