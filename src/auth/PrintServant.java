@@ -310,4 +310,9 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
 		String lEntry = user + "; wipeLog";
 		log.add(lEntry);
 	}
+
+	@Override
+	public void logout(long sessionKey) throws RemoteException, AuthException {
+		sessions.remove(sessionKey);
+	}
 }

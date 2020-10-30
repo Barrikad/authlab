@@ -269,4 +269,20 @@ class SuccessTests{
 		}
 		
 	}
+	
+	@Test
+	void canLogout() throws RemoteException, AuthException, DisabledException{
+		printServer.logout(sessionKey2);
+		verifier.endSession(sessionKey2);
+		assertThrows(AuthException.class, () -> {
+			printServer.print("file.txt", "printer1", sessionKey2);
+		});
+		assertThrows(AuthException.class, () -> {
+			printServer.login("user", sessionKey2);
+		});
+		
+		//clean up
+		sessionKey2 = verifier.generateSession("user", "1234", serviceName);
+		printServer.login("user", sessionKey2);
+	}
 }

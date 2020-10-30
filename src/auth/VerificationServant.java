@@ -128,4 +128,9 @@ public class VerificationServant extends UnicastRemoteObject implements Verifica
 
     }
 
+	@Override
+	public void endSession(long sessionKey) throws RemoteException, AuthException {
+		sessions.remove(sessionKey);
+	}
+
 }

@@ -70,4 +70,6 @@ public interface PrintService extends Remote{
 	//admin command
 	//wipe log
 	public void wipeLog(long sessionKey) throws RemoteException, AuthException;
+
+	public void logout(long sessionKey) throws RemoteException, AuthException;
 }

@@ -13,4 +13,6 @@ public interface VerificationService extends Remote {
 	long generateSession(String username, String password, String serviceName) throws RemoteException, AuthException;
 	
 	boolean verify(String username, String serviceName, long sessionKey) throws RemoteException, AuthException;
+
+	void endSession(long sessionKey) throws RemoteException, AuthException;
 }
