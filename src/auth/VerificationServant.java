@@ -27,10 +27,13 @@ public class VerificationServant extends UnicastRemoteObject implements Verifica
         random = new SecureRandom();
         Login admin = new Login(hasher, random);
         Login user = new Login(hasher, random);
+        
+        //TEST CODE! ENROLLMENT OF USERS IS NOT A PART OF THIS IMPLEMENTATION
         admin.setValues("admin", "password");
         user.setValues("user", "1234");
         logins.add(admin);
         logins.add(user);
+        //-------------------------------------------------------------------
     }
 
     private class Login {

@@ -1,9 +1,11 @@
 package auth;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.sql.*;
 import java.util.Arrays;
 import java.util.Properties;
+import com.mysql.cj.jdbc.Driver;
 
 public class DatabaseManager {
 
@@ -14,7 +16,7 @@ public class DatabaseManager {
 
     public DatabaseManager() throws ClassNotFoundException, IOException {
         Properties prop = new Properties();
-        prop.load(getClass().getClassLoader().getResourceAsStream("database.properties"));
+        prop.load(new FileInputStream("resources/database.properties"));
         jdbcDriver=prop.getProperty("jdbcDriver");
         dbUrl=prop.getProperty("dbUrl");
         dbUser=prop.getProperty("dbUser");
