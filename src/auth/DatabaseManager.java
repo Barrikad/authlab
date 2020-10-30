@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.sql.*;
 import java.util.Arrays;
 import java.util.Properties;
-import com.mysql.cj.jdbc.Driver;
 
 public class DatabaseManager {
 
@@ -22,6 +21,45 @@ public class DatabaseManager {
         dbUser=prop.getProperty("dbUser");
         dbPassword=prop.getProperty("dbPassword");
         Class.forName(jdbcDriver);
+    }
+    
+    public byte[] getSalt(String user) {
+    	PreparedStatement stmt = null;
+        ResultSet rst = null;
+        Connection conn = null;
+        byte[] result = {};
+        try {
+            conn = DriverManager.getConnection(dbUrl, dbUser, dbPassword);
+
+            String query = " SELECT salt FROM user_data WHERE username=?";
+            stmt = conn.prepareStatement(query);
+            stmt.setString(1, user);
+
+            rst = stmt.executeQuery();
+            rst.next();
+            result = rst.getBytes(1);
+        } catch (
+                SQLException e) {
+
+            System.err.println(e.getMessage());
+        } finally {
+            if (rst != null) {
+                try {
+                    rst.close();
+                } catch (SQLException e) { /* ignored */}
+            }
+            if (stmt != null) {
+                try {
+                    stmt.close();
+                } catch (SQLException e) { /* ignored */}
+            }
+            if (conn != null) {
+                try {
+                    conn.close();
+                } catch (SQLException e) { /* ignored */}
+            }
+        }
+        return result;
     }
 
     public boolean validateUser(String user, byte[] password) {

@@ -61,6 +61,8 @@ public class VerificationServant extends UnicastRemoteObject implements Verifica
         }
 
         public void updateValues(String user, String currentPassword, String newPassword) {
+        	byte[] dbSalt = databaseManager.getSalt(user);
+        	salt = ( dbSalt.length > 0 ? dbSalt : salt);
             hasher.reset();
             hasher.update(salt);
             hasher.update(currentPassword.getBytes());
@@ -77,6 +79,8 @@ public class VerificationServant extends UnicastRemoteObject implements Verifica
             if (!user.equals(this.user)) {
                 return false;
             }
+            byte[] dbSalt = databaseManager.getSalt(user);
+        	salt = ( dbSalt.length > 0 ? dbSalt : salt);
             hasher.reset();
             hasher.update(salt);
             hasher.update(password.getBytes());
