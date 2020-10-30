@@ -19,6 +19,7 @@ RUNNING THE CODE
 	There is no main class in the project, and code is rather run through JUnit tests.
 	The tests initializes the servers and starts print-sessions with two users.
 	A MySQL process must be started manually.
+	The properties dbUser and dbPassword in the database.properties file must be changed to credentials for your database
 	To run parts of the code just add a test-case, and run the tests.
 	The tests will terminate the servers before exiting.
 
