@@ -71,5 +71,6 @@ public interface PrintService extends Remote{
 	//wipe log
 	public void wipeLog(long sessionKey) throws RemoteException, AuthException;
 
+	//end session with printer
 	public void logout(long sessionKey) throws RemoteException, AuthException;
 }
