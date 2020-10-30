@@ -63,17 +63,18 @@ public class DatabaseManager {
         return result;
     }
 
-    public void insertUser(String user, byte[] password) {
+    public void insertUser(String user, byte[] password, byte[] salt) {
         PreparedStatement stmt = null;
         Connection conn = null;
         try {
             conn = DriverManager.getConnection(dbUrl, dbUser, dbPassword);
 
-            String query = " INSERT INTO user_data (username, password)"
-                    + " VALUES (?, ?)";
+            String query = " INSERT INTO user_data (username, password, salt)"
+                    + " VALUES (?, ?, ?)";
             stmt = conn.prepareStatement(query);
             stmt.setString(1, user);
             stmt.setBytes(2, password);
+            stmt.setBytes(3, salt);
 
             stmt.execute();
         } catch (
@@ -123,18 +124,19 @@ public class DatabaseManager {
         }
     }
 
-    public void updateUserPassword(String user, byte[] password) {
+    public void updateUserPassword(String user, byte[] password, byte[] salt) {
         PreparedStatement stmt = null;
         Connection conn = null;
         try {
             conn = DriverManager.getConnection(dbUrl, dbUser, dbPassword);
 
             String query = "UPDATE user_data "
-                    + "SET password = ? "
+                    + "SET password = ? AND salt = ? "
                     + "WHERE username = ?";
             stmt = conn.prepareStatement(query);
             stmt.setBytes(1, password);
-            stmt.setString(2, user);
+            stmt.setBytes(2, salt);
+            stmt.setString(3, user);
 
             stmt.execute();
         } catch (

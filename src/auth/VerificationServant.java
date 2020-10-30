@@ -56,7 +56,7 @@ public class VerificationServant extends UnicastRemoteObject implements Verifica
             hasher.reset();
             hasher.update(salt);
             hasher.update(password.getBytes());
-            databaseManager.insertUser(user, hasher.digest());
+            databaseManager.insertUser(user, hasher.digest(),salt);
             hasher.reset();
         }
 
@@ -68,7 +68,7 @@ public class VerificationServant extends UnicastRemoteObject implements Verifica
                 hasher.reset();
                 hasher.update(salt);
                 hasher.update(newPassword.getBytes());
-                databaseManager.updateUserPassword(user, hasher.digest());
+                databaseManager.updateUserPassword(user, hasher.digest(), salt);
             }
             hasher.reset();
         }
