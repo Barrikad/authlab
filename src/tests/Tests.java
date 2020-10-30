@@ -17,22 +17,8 @@ import java.util.List;
 
 import org.junit.jupiter.api.*;
 
-/*
- * TODO:
- * authenticate printer to verifier
- * authenticate verifier to user
- * authenticate printer to user
- * authenticate verifier to printer
- * persistency
- * formal analysis and modeling
- * accountability
- * password changes
- */
 
-/*
- * NOTES:
- * synchronized to avoid protected file being lost
- */
+
 
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
