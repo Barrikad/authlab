@@ -31,6 +31,8 @@ Goals:
 
 B authenticates A on Request
 Data secret between B,A
+SessionKey secret between A,B,s
 pw(A,s) guessable secret between A,s
+
 
 
