@@ -40,9 +40,9 @@ class Tests{
 	private long sessionKey;
 	private long sessionKey2;
 
-	private String[] job1 = {username,file1,"np"};
-	private String[] job2 = {username,file2,"np"};
-	private String[] job3 = {username,file3,"np"};
+	private String[] job1 = {username,file1};
+	private String[] job2 = {username,file2};
+	private String[] job3 = {username,file3};
 	private DatabaseManager databaseManager;
 	@BeforeAll
 	void setUp() throws NotBoundException, IOException, InterruptedException, AuthException, ClassNotFoundException {
@@ -106,7 +106,7 @@ class Tests{
 		printServer.print(file, printer1,sessionKey);
 		List<String[]> queue = printServer.queue(printer1,sessionKey);
 
-		String[] expected = {username,file,"np"};
+		String[] expected = {username,file};
 		boolean found = false;
 		for(String[] elem : queue) {
 			if(Arrays.equals(elem,expected)) {
@@ -202,6 +202,7 @@ class Tests{
 		printServer.setConfig("fast", "true", sessionKey);
 		printServer.readConfig("fast", sessionKey);
 		printServer.print(file1, printer1, sessionKey);
+		printServer.print(file2, printer1, sessionKey);
 		printServer.topQueue(printer1, 1, sessionKey);
 		printServer.start(sessionKey);
 		printServer.restart(sessionKey);
@@ -209,14 +210,13 @@ class Tests{
 
 		String[] excpected = {"admin; wipeLog",
 							  "admin; print; printer1; file1.txt",
-							  "admin; printProtected; printer1; file2.txt",
 							  "admin; queue; printer1",
 							  "admin; abort; printer1; file1.txt",
 							  "admin; setConfig; fast; true",
 							  "admin; readConfig; fast",
 							  "admin; print; printer1; file1.txt",
-							  "admin; topQueue; printer1; file1.txt",
-							  "admin; stopProtected",
+							  "admin; print; printer1; file2.txt",
+							  "admin; topQueue; printer1; file2.txt",
 							  "admin; start",
 							  "admin; stop",
 							  "admin; start"};
