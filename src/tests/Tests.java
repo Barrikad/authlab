@@ -64,7 +64,7 @@ class Tests{
 
 		//connect to printer
 		//assuming secured connection with signature from printer
-		registry = LocateRegistry.getRegistry(InetAddress.getLocalHost().getHostName(), this.portNumber);
+		registry = LocateRegistry.getRegistry(InetAddress.getLocalHost().getHostName(), portNumber);
 		printServer = (PrintService) registry.lookup(serviceName);
 
 		//connect to verifier
@@ -88,7 +88,7 @@ class Tests{
 
 	@AfterEach
 	void stop() throws RemoteException, AuthException {
-		printServer.stopProtected(sessionKey);
+		printServer.stop(sessionKey);
 	}
 
 	@AfterAll
@@ -179,33 +179,6 @@ class Tests{
 	}
 
 	@Test
-	void cantWipeProtected() throws RemoteException, AuthException, DisabledException{
-		printServer.printProtected(file1, printer1, sessionKey2);
-		printServer.print(file2, printer1, sessionKey);
-		printServer.topQueue(printer1, 1, sessionKey);
-		List<String[]> queue = printServer.queue(printer1, sessionKey);
-		String[] job = {username,file2,"np"};
-		assertArrayEquals(queue.get(1),job);
-	}
-
-	@Test
-	void censorsProtected() throws RemoteException, AuthException, DisabledException{
-		printServer.printProtected(file1, printer1, sessionKey2);
-		printServer.print(file2, printer1, sessionKey);
-		List<String[]> queue = printServer.queue(printer1, sessionKey);
-		assertFalse(queue.get(0)[0].equals("user") || queue.get(0)[1].equals(file1));
-	}
-
-	@Test
-	void cantStopProtected() throws RemoteException, AuthException, DisabledException{
-		printServer.print(file2, printer2, sessionKey);
-		printServer.printProtected(file1, printer2, sessionKey2);
-		assertThrows(AuthException.class,() ->
-			printServer.stop(sessionKey2)
-		);
-	}
-
-	@Test
 	void canFailVerification(){
 		assertThrows(AuthException.class, ()->
 			verifier.generateSession(username, "wrong", serviceName)
@@ -224,14 +197,12 @@ class Tests{
 	void actionsAreLogged() throws RemoteException, AuthException, DisabledException{
 		printServer.wipeLog(sessionKey);
 		printServer.print(file1, printer1, sessionKey);
-		printServer.printProtected(file2, printer1, sessionKey);
 		printServer.queue(printer1, sessionKey);
 		printServer.abort(printer1, 0, sessionKey);
 		printServer.setConfig("fast", "true", sessionKey);
 		printServer.readConfig("fast", sessionKey);
 		printServer.print(file1, printer1, sessionKey);
 		printServer.topQueue(printer1, 1, sessionKey);
-		printServer.stopProtected(sessionKey);
 		printServer.start(sessionKey);
 		printServer.restart(sessionKey);
 		List<String> log = printServer.getLog(sessionKey);

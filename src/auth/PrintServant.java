@@ -66,25 +66,10 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
 	public synchronized String print(String filename, String printer, long sessionKey) throws RemoteException, AuthException, DisabledException {
 		checkOnline();
 		String user = checkUser(sessionKey);
-		//"np" for not-protected
-		String[] entry = {user,filename,"np"};
+		String[] entry = {user,filename};
 		printQueue.get(printer).add(entry);
 		
 		String lEntry = user + "; print; " + printer + "; " + filename;
-		log.add(lEntry);
-		return "job added to printer";
-	}
-
-
-	@Override
-	public synchronized String printProtected(String filename, String printer, long sessionKey) throws RemoteException, AuthException, DisabledException {
-		checkOnline();
-		String user = checkUser(sessionKey);
-		//"np" for not-protected
-		String[] entry = {user,filename,"p"};
-		printQueue.get(printer).add(entry);
-		
-		String lEntry = user + "; printProtected; " + printer + "; " + filename;
 		log.add(lEntry);
 		return "job added to printer";
 	}
@@ -105,16 +90,7 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
 	public synchronized List<String[]> queue(String printer, long sessionKey) throws RemoteException, AuthException, DisabledException {
 		checkOnline();
 		String user = checkUser(sessionKey);
-		List<String[]> queue = new ArrayList<>();
-		for(String[] elem : printQueue.get(printer)) {
-			//check if element is protected 
-			if(!elem[0].equals(user) && elem[2].equals("p")) {
-				String[] cencored = {"censored","censored","p"};
-				queue.add(cencored);
-			}else {
-				queue.add(elem);
-			}
-		}
+		List<String[]> queue = printQueue.get(printer);
 		
 		String lEntry = user + "; queue; " + printer;
 		log.add(lEntry);
@@ -127,23 +103,11 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
 		String user = checkUser(sessionKey);
 		List<String[]> queue = printQueue.get(printer);
 		
-		//find first nonprotected job
-		int index = 0;
-		for(; index < queue.size(); index++) {
-			if(queue.get(index)[2].equals("np")) {
-				break;
-			}
-		}
-		
 		String lEntry = user + "; topQueue; " + printer + "; " + queue.get(job)[1];
 		log.add(lEntry);
 		
-		if(index < job) {
-			Collections.swap(queue, index, job);
-			return "Job swapped with job at position " + String.valueOf(index); 
-		}else {
-			return "Could not swap with protected jobs";
-		}
+		Collections.swap(queue, 0, job);
+		return "Job swapped with job at position 0"; 
 	}
 
 	@Override
@@ -159,13 +123,6 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
 	@Override
 	public synchronized String stop(long sessionKey) throws RemoteException, AuthException {
 		String user = checkUser(sessionKey);
-		for(String printer : printQueue.keySet()) {
-			for(String[] elem : printQueue.get(printer)) {
-				if(elem[2].equals("p")) {
-					throw new AuthException("Can't stop server while protected processes are running");
-				}
-			}
-		}
 		online = false;
 		for(String printer : printQueue.keySet()) {
 			printQueue.get(printer).clear();
@@ -182,7 +139,7 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
 		stop(sessionKey);
 		start(sessionKey);
 		
-		//accountability ensure by start and stop
+		//accountability ensured by start and stop
 		return "Printer restarted";
 	}
 
@@ -232,9 +189,6 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
 	@Override
 	public synchronized String shutdown(long sessionKey) throws RemoteException, AuthException {
 		String user = checkUser(sessionKey);
-		if(!user.equals("admin")) {
-			throw new AuthException("only admin can end protected jobs");
-		}
 		shutdown = true;
 		
 		String lEntry = user + "; shutdown";
@@ -274,26 +228,8 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
 	}
 
 	@Override
-	public synchronized void stopProtected(long sessionKey) throws RemoteException, AuthException {
-		String user = checkUser(sessionKey);
-		if(!user.equals("admin")) {
-			throw new AuthException("only admin can end protected jobs");
-		}
-		online = false;
-		for(String printer : printQueue.keySet()) {
-			printQueue.get(printer).clear();
-		}
-		
-		String lEntry = user + "; stopProtected";
-		log.add(lEntry);
-	}
-
-	@Override
 	public synchronized List<String> getLog(long sessionKey) throws RemoteException, AuthException {
 		String user = checkUser(sessionKey);
-		if(!user.equals("admin")) {
-			throw new AuthException("only admin can end protected jobs");
-		}
 		
 		String lEntry = user + "; getLog";
 		log.add(lEntry);
@@ -303,9 +239,7 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
 	@Override
 	public synchronized void wipeLog(long sessionKey) throws RemoteException, AuthException {
 		String user = checkUser(sessionKey);
-		if(!user.equals("admin")) {
-			throw new AuthException("only admin can end protected jobs");
-		}
+
 		log.clear();
 		String lEntry = user + "; wipeLog";
 		log.add(lEntry);

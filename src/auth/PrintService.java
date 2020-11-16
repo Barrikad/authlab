@@ -13,10 +13,6 @@ public interface PrintService extends Remote{
 	//Return status from printer
 	public String print(String filename, String printer, long sessionKey) throws RemoteException,AuthException, DisabledException;
 	
-	//Starts a protected print job
-	//A protected job can not stopped or suppressed by another client
-	public String printProtected(String filename, String printer, long sessionKey) throws RemoteException,AuthException, DisabledException;
-	
 	//Removes given job from queue of printer
 	public String abort(String printer, int job, long sessionKey) throws RemoteException,AuthException, DisabledException;
 	
@@ -58,10 +54,6 @@ public interface PrintService extends Remote{
 	
 	//nonremote shutdown-message to rmi
 	public boolean shouldShutdown() throws RemoteException;
-	
-	//admin command. Can not be run by other users than admin
-	//stops and wipes even protected processes
-	public void stopProtected(long sessionKey) throws RemoteException, AuthException;
 
 	//admin command
 	//returns log
