@@ -26,17 +26,17 @@ public interface PrintService extends Remote{
 	public String topQueue(String printer, int job, long sessionKey) throws RemoteException,AuthException, DisabledException;
 	
 	//Starts printer services
-	public String start(long sessionKey) throws RemoteException,AuthException;
+	public String start(long sessionKey) throws RemoteException,AuthException, DisabledException;
 	
 	//Stops printer services
 	//Clears queues of all printers
 	//Can't be used if protected jobs are queued
-	public String stop(long sessionKey) throws RemoteException,AuthException;
+	public String stop(long sessionKey) throws RemoteException,AuthException, DisabledException;
 	
 	//Stops and starts printer services
 	//This will clear queues
 	//Can't be used if protected jobs are queued
-	public String restart(long sessionKey) throws RemoteException,AuthException;
+	public String restart(long sessionKey) throws RemoteException,AuthException, DisabledException;
 	
 	//Returns status of given printer
 	public String status(String printer, long sessionKey) throws RemoteException,AuthException, DisabledException;
@@ -57,11 +57,11 @@ public interface PrintService extends Remote{
 
 	//admin command
 	//returns log
-	public List<String> getLog(long sessionKey) throws RemoteException, AuthException;
+	public List<String> getLog(long sessionKey) throws RemoteException, AuthException, DisabledException;
 	
 	//admin command
 	//wipe log
-	public void wipeLog(long sessionKey) throws RemoteException, AuthException;
+	public void wipeLog(long sessionKey) throws RemoteException, AuthException, DisabledException;
 
 	//end session with printer
 	public void logout(long sessionKey) throws RemoteException, AuthException;
