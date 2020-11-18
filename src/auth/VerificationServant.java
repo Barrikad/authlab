@@ -7,25 +7,31 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class VerificationServant extends UnicastRemoteObject implements VerificationService {
     private static final long serialVersionUID = 8868835734121491443L;
     private boolean shutdown = false;
     private Map<Long, String[]> sessions;
+    private Map<String, List<String>> roles;
     private MessageDigest hasher;
     private SecureRandom random;
     private DatabaseManager databaseManager;
 
-    public VerificationServant() throws IOException, NoSuchAlgorithmException, ClassNotFoundException {
+    public VerificationServant() throws IOException, NoSuchAlgorithmException, ClassNotFoundException, SQLException {
         super();
         sessions = new HashMap<>();
         hasher = MessageDigest.getInstance("SHA-512");
         random = new SecureRandom();
-        this.databaseManager = new DatabaseManager();
+        databaseManager = new DatabaseManager();
+        roles=databaseManager.getRoles();
+        for(Map.Entry<String,List<String>> entry: roles.entrySet()){
+            System.out.println(entry.getKey()+':');
+            for(String x:entry.getValue())
+                System.out.println(x);
+            System.out.println();
+            System.out.println();
+        }
        
     }
 
@@ -82,14 +88,14 @@ public class VerificationServant extends UnicastRemoteObject implements Verifica
     
     @Override
     //test code! enrollment is not a part of this implementation
-    public void setValues(String user, String[] permissions,String password) throws RemoteException{
+    public void setValues(String user, String password) throws RemoteException{
         byte[] salt = new byte[16];
         random.nextBytes(salt);
         hasher.reset();
         hasher.update(salt);
         hasher.update(password.getBytes());
         try {
-			databaseManager.insertUser(user, permissions, hasher.digest(),salt);
+			databaseManager.insertUser(user, hasher.digest(),salt);
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -119,13 +125,13 @@ public class VerificationServant extends UnicastRemoteObject implements Verifica
 
         long key = random.nextLong();
         
-        String permissions = "";
-		try {
-			permissions = databaseManager.getPermissions(username);
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-        String[] sessionVals = {username, serviceName, permissions};
+//        String permissions = "";
+//		try {
+//			permissions = databaseManager.getPermissions(username);
+//		} catch (SQLException e) {
+//			e.printStackTrace();
+//		}
+        String[] sessionVals = {username, serviceName};
         sessions.put(key, sessionVals);
         return key;
     }
@@ -142,21 +148,20 @@ public class VerificationServant extends UnicastRemoteObject implements Verifica
 		sessions.remove(sessionKey);
 	}
 
-	@Override
-	public String[] getPermissions(long sessionKey) throws RemoteException, AuthException {
-		String[] session = sessions.get(sessionKey);
-		if(session == null) {
-			throw new AuthException("no session found");
-		}
-		String[] pers = session[2].split(";");
-		for(String str : pers) {
-			String[] temp = str.split(":");
-			//find service matching session
-			if(temp[0].equals(session[1])) {
-				return temp[1].split(",");
-			}
-		}
-		throw new AuthException("no permissions found!");
-	}
-
+//	@Override
+//	public String[] getPermissions(long sessionKey) throws RemoteException, AuthException {
+//		String[] session = sessions.get(sessionKey);
+//		if(session == null) {
+//			throw new AuthException("no session found");
+//		}
+//		String[] pers = session[2].split(";");
+//		for(String str : pers) {
+//			String[] temp = str.split(":");
+//			//find service matching session
+//			if(temp[0].equals(session[1])) {
+//				return temp[1].split(",");
+//			}
+//		}
+//		throw new AuthException("no permissions found!");
+//	}
 }

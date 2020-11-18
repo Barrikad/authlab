@@ -247,7 +247,7 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
 			
 			if(verifier.verify(username, "printer", sessionKey)) {
 				sessions.put(sessionKey, username);
-				permissions.put(sessionKey, verifier.getPermissions(sessionKey));
+//				permissions.put(sessionKey, verifier.getPermissions(sessionKey));
 			}else {
 				throw new AuthException("user was not verified by database");
 			}

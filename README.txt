@@ -8,8 +8,6 @@ INSTRUCTIONS TO CREATE DATABASE
    GRANT ALL PRIVILEGES ON * . * TO '<username>'@'localhost';
    FLUSH PRIVILEGES;
    CREATE DATABASE auth;
-   USE auth;
-   CREATE TABLE user_data(username varchar(30), permissions varchar(500), password varbinary(500), salt varbinary(500));
 
 DEPENDENCIES
 	To run the project you will need JUnit 5 and the MySQL connector for java

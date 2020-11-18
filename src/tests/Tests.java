@@ -70,6 +70,8 @@ class Tests{
 			users[i].name = names[i];
 			users[i].password = String.valueOf(pwGenerator.nextLong());
 		}
+
+		//ACL
 		//permissions not hardcoded but in a database
 		//its just that database is constructed from tests
 		users[0].permissions = adminR;
@@ -79,7 +81,16 @@ class Tests{
 		users[4].permissions = userR;
 		users[5].permissions = userR;
 		users[6].permissions = userR;
-		
+
+		//RBAC
+		users[0].role = "ADMIN";
+		users[1].role = "TECHNICIAN";
+		users[2].role = "POWER";
+		users[3].role = "ORDINARY";
+		users[4].role = "ORDINARY";
+		users[5].role = "ORDINARY";
+		users[6].role = "ORDINARY";
+
 		//connect to printer
 		//assuming secured connection with signature from printer
 		registry = LocateRegistry.getRegistry(InetAddress.getLocalHost().getHostName(), portNumber);
@@ -92,7 +103,7 @@ class Tests{
 		//authenticate to verifier
 		//login to printer
 		for(User user : users) {
-			verifier.setValues(user.name, user.permissions, user.password);
+			verifier.setValues(user.name, user.password);
 			user.sessionKey = verifier.generateSession(user.name,user.password,serviceName);
 			printServer.login(user.name, user.sessionKey);
 		}
@@ -106,6 +117,7 @@ class Tests{
 	private class User{
 		public String name;
 		public String[] permissions;
+		public String role;
 		public String password;
 		public long sessionKey;
 	}
