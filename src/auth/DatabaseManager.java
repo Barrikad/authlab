@@ -6,6 +6,7 @@ import java.sql.*;
 import java.util.Arrays;
 import java.util.Properties;
 
+//It is assumed that only the verifier would be able to connect to the manager and use these methods
 public class DatabaseManager {
 
     private String jdbcDriver;
@@ -23,174 +24,108 @@ public class DatabaseManager {
         Class.forName(jdbcDriver);
     }
     
-    public byte[] getSalt(String user) {
+    //just throw the error and assume it's a failed login
+    public byte[] getSalt(String user) throws SQLException {
     	PreparedStatement stmt = null;
         ResultSet rst = null;
         Connection conn = null;
         byte[] result = {};
-        try {
-            conn = DriverManager.getConnection(dbUrl, dbUser, dbPassword);
+        
+        conn = DriverManager.getConnection(dbUrl, dbUser, dbPassword);
 
-            String query = " SELECT salt FROM user_data WHERE username=?";
-            stmt = conn.prepareStatement(query);
-            stmt.setString(1, user);
+        String query = " SELECT salt FROM user_data WHERE username=?";
+        stmt = conn.prepareStatement(query);
+        stmt.setString(1, user);
 
-            rst = stmt.executeQuery();
-            rst.next();
-            result = rst.getBytes(1);
-        } catch (
-                SQLException e) {
-
-            System.err.println(e.getMessage());
-        } finally {
-            if (rst != null) {
-                try {
-                    rst.close();
-                } catch (SQLException e) { /* ignored */}
-            }
-            if (stmt != null) {
-                try {
-                    stmt.close();
-                } catch (SQLException e) { /* ignored */}
-            }
-            if (conn != null) {
-                try {
-                    conn.close();
-                } catch (SQLException e) { /* ignored */}
-            }
-        }
+        rst = stmt.executeQuery();
+        rst.next();
+        result = rst.getBytes(1);
+        
+        rst.close();
+        stmt.close();
+        conn.close();
         return result;
     }
 
-    public boolean validateUser(String user, byte[] password) {
+    public boolean validateUser(String user, byte[] password) throws SQLException {
         PreparedStatement stmt = null;
         ResultSet rst = null;
         Connection conn = null;
         boolean result = false;
-        try {
-            conn = DriverManager.getConnection(dbUrl, dbUser, dbPassword);
+        
+        conn = DriverManager.getConnection(dbUrl, dbUser, dbPassword);
 
-            String query = " SELECT password FROM user_data WHERE username=?";
-            stmt = conn.prepareStatement(query);
-            stmt.setString(1, user);
+        String query = " SELECT password FROM user_data WHERE username=?";
+        stmt = conn.prepareStatement(query);
+        stmt.setString(1, user);
 
-            rst = stmt.executeQuery();
-            rst.next();
-            result = Arrays.equals(rst.getBytes(1), password);
-        } catch (
-                SQLException e) {
-
-            System.err.println(e.getMessage());
-        } finally {
-            if (rst != null) {
-                try {
-                    rst.close();
-                } catch (SQLException e) { /* ignored */}
-            }
-            if (stmt != null) {
-                try {
-                    stmt.close();
-                } catch (SQLException e) { /* ignored */}
-            }
-            if (conn != null) {
-                try {
-                    conn.close();
-                } catch (SQLException e) { /* ignored */}
-            }
-        }
+        rst = stmt.executeQuery();
+        rst.next();
+        result = Arrays.equals(rst.getBytes(1), password);
+        
+        rst.close();
+        stmt.close();
+        conn.close();
         return result;
     }
 
-    public void insertUser(String user, byte[] password, byte[] salt) {
+    public void insertUser(String user, String[] permissions, byte[] password, byte[] salt) throws SQLException {
         PreparedStatement stmt = null;
         Connection conn = null;
-        try {
-            conn = DriverManager.getConnection(dbUrl, dbUser, dbPassword);
-
-            String query = " INSERT INTO user_data (username, password, salt)"
-                    + " VALUES (?, ?, ?)";
-            stmt = conn.prepareStatement(query);
-            stmt.setString(1, user);
-            stmt.setBytes(2, password);
-            stmt.setBytes(3, salt);
-
-            stmt.execute();
-        } catch (
-                SQLException e) {
-            System.err.println(e.getMessage());
-        } finally {
-            if (stmt != null) {
-                try {
-                    stmt.close();
-                } catch (SQLException e) { /* ignored */}
-            }
-            if (conn != null) {
-                try {
-                    conn.close();
-                } catch (SQLException e) { /* ignored */}
-            }
+        
+        conn = DriverManager.getConnection(dbUrl, dbUser, dbPassword);
+        String permissionsF = "printer:";
+        for(String p : permissions) {
+        	permissionsF += p + ",";
         }
+        String query = " INSERT INTO user_data (username, permissions, password, salt)"
+                + " VALUES (?, ?, ?, ?)";
+        stmt = conn.prepareStatement(query);
+        stmt.setString(1, user);
+        //remove last ',' in permissionsF
+        stmt.setString(2, permissionsF.substring(0, permissionsF.length()-1));
+        stmt.setBytes(3, password);
+        stmt.setBytes(4, salt);
+
+        stmt.execute();
+        
+        stmt.close();
+        conn.close();
     }
 
-    //for tests only
-    public void deleteUser(String user) {
+    public void deleteUser(String user) throws SQLException {
         PreparedStatement stmt = null;
         Connection conn = null;
-        try {
-            conn = DriverManager.getConnection(dbUrl, dbUser, dbPassword);
+    
+        conn = DriverManager.getConnection(dbUrl, dbUser, dbPassword);
 
-            String query = " DELETE FROM user_data WHERE username=?";
-            stmt = conn.prepareStatement(query);
-            stmt.setString(1, user);
+        String query = " DELETE FROM user_data WHERE username=?";
+        stmt = conn.prepareStatement(query);
+        stmt.setString(1, user);
 
-            stmt.executeUpdate();
-            conn.close();
-        } catch (
-                SQLException e) {
-            System.err.println(e.getMessage());
-        } finally {
-            if (stmt != null) {
-                try {
-                    stmt.close();
-                } catch (SQLException e) { /* ignored */}
-            }
-            if (conn != null) {
-                try {
-                    conn.close();
-                } catch (SQLException e) { /* ignored */}
-            }
-        }
+        stmt.executeUpdate();
+        
+        stmt.close();
+        conn.close();
     }
 
-    public void updateUserPassword(String user, byte[] password, byte[] salt) {
+    public void updateUserPassword(String user, byte[] password, byte[] salt) throws SQLException {
         PreparedStatement stmt = null;
         Connection conn = null;
-        try {
-            conn = DriverManager.getConnection(dbUrl, dbUser, dbPassword);
+        
+        conn = DriverManager.getConnection(dbUrl, dbUser, dbPassword);
 
-            String query = "UPDATE user_data "
-                    + "SET password = ? AND salt = ? "
-                    + "WHERE username = ?";
-            stmt = conn.prepareStatement(query);
-            stmt.setBytes(1, password);
-            stmt.setBytes(2, salt);
-            stmt.setString(3, user);
+        String query = "UPDATE user_data "
+                + "SET password = ? AND salt = ? "
+                + "WHERE username = ?";
+        stmt = conn.prepareStatement(query);
+        stmt.setBytes(1, password);
+        stmt.setBytes(2, salt);
+        stmt.setString(3, user);
 
-            stmt.execute();
-        } catch (
-                SQLException e) {
-            System.err.println(e.getMessage());
-        } finally {
-            if (stmt != null) {
-                try {
-                    stmt.close();
-                } catch (SQLException e) { /* ignored */}
-            }
-            if (conn != null) {
-                try {
-                    conn.close();
-                } catch (SQLException e) { /* ignored */}
-            }
-        }
+        stmt.execute();
+        
+        stmt.close();
+        conn.close();
     }
 }

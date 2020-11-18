@@ -6,6 +6,7 @@ import java.rmi.server.UnicastRemoteObject;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -15,79 +16,59 @@ public class VerificationServant extends UnicastRemoteObject implements Verifica
     private static final long serialVersionUID = 8868835734121491443L;
     private boolean shutdown = false;
     private Map<Long, String[]> sessions;
-    private Set<Login> logins;
     private MessageDigest hasher;
     private SecureRandom random;
+    private DatabaseManager databaseManager;
 
     public VerificationServant() throws IOException, NoSuchAlgorithmException, ClassNotFoundException {
         super();
-        logins = new HashSet<>();
         sessions = new HashMap<>();
         hasher = MessageDigest.getInstance("SHA-512");
         random = new SecureRandom();
-        Login admin = new Login(hasher, random);
-        Login user = new Login(hasher, random);
-        
-        //TEST CODE! ENROLLMENT OF USERS IS NOT A PART OF THIS IMPLEMENTATION
-        admin.setValues("admin", "password");
-        user.setValues("user", "1234");
-        logins.add(admin);
-        logins.add(user);
-        //-------------------------------------------------------------------
+        this.databaseManager = new DatabaseManager();
+       
     }
 
-    private class Login {
-        public String user;
-        public byte[] salt;
-        private MessageDigest hasher;
-        private SecureRandom random;
-        private DatabaseManager databaseManager;
-
-        public Login(MessageDigest hasher, SecureRandom random) throws ClassNotFoundException, IOException {
-            this.hasher = hasher;
-            this.random = random;
-            this.databaseManager = new DatabaseManager();
-        }
-
-        public void setValues(String user, String password) {
-            this.user = user;
-            this.salt = new byte[16];
-            random.nextBytes(salt);
+    private void updateValues(String user, String currentPassword, String newPassword) throws AuthException {
+        if (validLogin(user,currentPassword)) {
+        	byte[] salt = new byte[16];
+        	random.nextBytes(salt);
             hasher.reset();
             hasher.update(salt);
-            hasher.update(password.getBytes());
-            databaseManager.insertUser(user, hasher.digest(),salt);
+            hasher.update(newPassword.getBytes());
+            try {
+				databaseManager.updateUserPassword(user, hasher.digest(), salt);
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
             hasher.reset();
+        }else {
+        	throw new AuthException("failed to authenticate user");
         }
+    }
 
-        public void updateValues(String user, String currentPassword, String newPassword) {
-        	byte[] dbSalt = databaseManager.getSalt(user);
-        	salt = ( dbSalt.length > 0 ? dbSalt : salt);
-            hasher.reset();
-            hasher.update(salt);
-            hasher.update(currentPassword.getBytes());
-            if (databaseManager.validateUser(user, hasher.digest())) {
-                hasher.reset();
-                hasher.update(salt);
-                hasher.update(newPassword.getBytes());
-                databaseManager.updateUserPassword(user, hasher.digest(), salt);
-            }
-            hasher.reset();
+    //returns false if login is invalid or a database error happens
+    private boolean validLogin(String user, String password) {
+        byte[] salt;
+		try {
+			salt = databaseManager.getSalt(user);
+		} catch (SQLException e) {
+			return false;
+		}
+        if(salt.length == 0 || password.length() == 0) {
+        	return false;
         }
-
-        public boolean validLogin(String user, String password) {
-            if (!user.equals(this.user)) {
-                return false;
-            }
-            byte[] dbSalt = databaseManager.getSalt(user);
-        	salt = ( dbSalt.length > 0 ? dbSalt : salt);
-            hasher.reset();
-            hasher.update(salt);
-            hasher.update(password.getBytes());
-            boolean result = databaseManager.validateUser(user, hasher.digest());
-            hasher.reset();
-            return result;
-        }
+        hasher.reset();
+        hasher.update(salt);
+        hasher.update(password.getBytes());
+        boolean result;
+		try {
+			result = databaseManager.validateUser(user, hasher.digest());
+		} catch (SQLException e) {
+			return false;
+		}
+        hasher.reset();
+        return result;
     }
 
     @Override
@@ -98,24 +79,41 @@ public class VerificationServant extends UnicastRemoteObject implements Verifica
         }
         return shutdown;
     }
+    
+    @Override
+    //test code! enrollment is not a part of this implementation
+    public void setValues(String user, String[] permissions,String password) throws RemoteException{
+        byte[] salt = new byte[16];
+        random.nextBytes(salt);
+        hasher.reset();
+        hasher.update(salt);
+        hasher.update(password.getBytes());
+        try {
+			databaseManager.insertUser(user, permissions, hasher.digest(),salt);
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+        hasher.reset();
+    }
+    
+    @Override
+    //test code! enrollment is not a part of this implementation
+    public void unsetValues(String user) throws RemoteException{
+        try {
+			databaseManager.deleteUser(user);
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+    }
 
     @Override
     public synchronized void shutdown() throws RemoteException {
         shutdown = true;
     }
 
-    private boolean userExists(String user, String password) {
-        for (Login lg : logins) {
-            if (lg.validLogin(user, password)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     @Override
     public synchronized long generateSession(String username, String password, String serviceName) throws RemoteException, AuthException {
-        if (!userExists(username, password)) {
+        if (!validLogin(username, password)) {
             throw new AuthException("Username or password not valid");
         }
 
