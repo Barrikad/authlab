@@ -1,7 +1,0 @@
-Alice 1
-Bob 2
-Cecilia 3
-David 4
-Erica 4
-Fred 4
-George 4

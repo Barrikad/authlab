@@ -40,9 +40,9 @@ class Tests{
 	private String[] job1 = new String[2];
 	private String[] job2 = new String[2];
 	private String[] job3 = new String[2];
-	private static final String[] adminR = {"p","q","tq","sa","so","r","su","rc","sc"};
-	private static final String[] techR = {"sa","so","r","su","rc","sc"};
-	private static final String[] powerR = {"p","q","tq","r"};
+	private static final String[] adminR = {"p","q","tq","sa","so","a","r","su","rc","sc"};
+	private static final String[] techR = {"sa","so","r","su","rc","a","sc"};
+	private static final String[] powerR = {"p","q","tq","r","a"};
 	private static final String[] userR = {"p"};
 
 	@BeforeAll

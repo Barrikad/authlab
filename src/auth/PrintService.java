@@ -26,12 +26,12 @@ public interface PrintService extends Remote{
 	public String topQueue(String printer, int job, long sessionKey) throws RemoteException,AuthException, DisabledException;
 	
 	//Starts printer services
-	public String start(long sessionKey) throws RemoteException,AuthException, DisabledException;
+	public String start(long sessionKey) throws RemoteException,AuthException;
 	
 	//Stops printer services
 	//Clears queues of all printers
 	//Can't be used if protected jobs are queued
-	public String stop(long sessionKey) throws RemoteException,AuthException, DisabledException;
+	public String stop(long sessionKey) throws RemoteException,AuthException;
 	
 	//Stops and starts printer services
 	//This will clear queues

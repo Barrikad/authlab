@@ -1,9 +1,5 @@
 package auth;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStreamReader;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.rmi.NotBoundException;
@@ -25,10 +21,10 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
 
 	private final int portNumber = 2019;
 	private final String vName = "verification";
-	//maps roles to users
-	private Map<String,Integer> roles;
 	//maps sessionkeys to users
 	private Map<Long,String> sessions;
+	//map sessionkeys to permissions
+	private Map<Long,String[]> permissions;
 	//a list for each printer with jobs and their owners
 	private Map<String,List<String[]>> printQueue;
 	//config file stand-in
@@ -42,12 +38,11 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
 
 	public PrintServant() throws RemoteException {
 		super();
-		roles = new HashMap<String,Integer>();
+		permissions = new HashMap<>();
 		printQueue = new HashMap<String,List<String[]>>();
 		sessions = new HashMap<Long,String>();
 		config = new HashMap<>();
 		log = new ArrayList<>();
-		getAllUserRoles();
 		
 		for(int i = 0; i < printerNum; i++) {
 			printQueue.put("printer" + String.valueOf(i + 1), new ArrayList<String[]>());
@@ -67,41 +62,22 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
 		}
 		return user;
 	}
-	//get user roles from the policy file
-    private void getAllUserRoles() {
-    	try {
-    		String pathname = "account.txt";
-			File filename = new File(pathname);
-			InputStreamReader reader = new InputStreamReader(new FileInputStream(filename));
-			BufferedReader br = new BufferedReader(reader);
-			String line = "";
-			line = br.readLine();
-			String[] arr = line.split("\\s+");
-			roles.put(arr[0], Integer. parseInt(arr[1]));
-			while(line != null) {
-				line = br.readLine();
-				if (line != null) {
-					String[] arr2 = line.split("\\s+");
-					roles.put(arr2[0], Integer. parseInt(arr2[1]));
-				}
+	
+	private void checkPermission(long sessionKey, String permission) throws AuthException {
+		String[] userPermissions = permissions.get(sessionKey);
+		for (String p : userPermissions) {
+			if(p.equals(permission)) {
+				return;
 			}
-    		
-    	}catch (Exception e) {
-			e.printStackTrace();
 		}
-    }
-    //Check user's authority, 1 means highest authority, can access every service, using a Hierarchical structure, 4 levels in total
-    private void checkUserRole(String userName,int serviceLevel) throws DisabledException {
-    	roles.get(userName);
-		if(roles.get(userName)>serviceLevel) {
-			throw new DisabledException("You don't have the authority to use this service");
-		}
+		throw new AuthException("Permission denied");
 	}
+	
 	@Override
 	public synchronized String print(String filename, String printer, long sessionKey) throws RemoteException, AuthException, DisabledException {
 		checkOnline();	
 		String user = checkUser(sessionKey);
-		checkUserRole(user,4);
+		checkPermission(sessionKey,"p");
 		String[] entry = {user,filename};
 		printQueue.get(printer).add(entry);
 		
@@ -114,6 +90,7 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
 	public synchronized String abort(String printer, int job, long sessionKey) throws RemoteException, AuthException, DisabledException {
 		checkOnline();
 		String user = checkUser(sessionKey);
+		checkPermission(sessionKey,"a");
 		List<String[]> queue = printQueue.get(printer);
 		String[] removed = queue.remove(job);
 		
@@ -126,7 +103,7 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
 	public synchronized List<String[]> queue(String printer, long sessionKey) throws RemoteException, AuthException, DisabledException {
 		checkOnline();
 		String user = checkUser(sessionKey);
-		checkUserRole(user,3);
+		checkPermission(sessionKey,"q");
 		List<String[]> queue = printQueue.get(printer);
 		
 		String lEntry = user + "; queue; " + printer;
@@ -138,7 +115,7 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
 	public synchronized String topQueue(String printer, int job, long sessionKey) throws RemoteException, AuthException, DisabledException {
 		checkOnline();
 		String user = checkUser(sessionKey);
-		checkUserRole(user,3);
+		checkPermission(sessionKey,"tq");
 		List<String[]> queue = printQueue.get(printer);
 		
 		String lEntry = user + "; topQueue; " + printer + "; " + queue.get(job)[1];
@@ -149,9 +126,9 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
 	}
 
 	@Override
-	public synchronized String start(long sessionKey) throws RemoteException, AuthException, DisabledException {
+	public synchronized String start(long sessionKey) throws RemoteException, AuthException{
 		String user = checkUser(sessionKey);
-		checkUserRole(user,2);
+		checkPermission(sessionKey,"a");
 		online = true;
 		
 		String lEntry = user + "; start";
@@ -160,9 +137,9 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
 	}
 
 	@Override
-	public synchronized String stop(long sessionKey) throws RemoteException, AuthException, DisabledException {
+	public synchronized String stop(long sessionKey) throws RemoteException, AuthException {
 		String user = checkUser(sessionKey);
-		checkUserRole(user,2);
+		checkPermission(sessionKey,"so");
 		online = false;
 		for(String printer : printQueue.keySet()) {
 			printQueue.get(printer).clear();
@@ -175,8 +152,8 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
 
 	@Override
 	public synchronized String restart(long sessionKey) throws RemoteException, AuthException, DisabledException {
-		String user = checkUser(sessionKey);
-		checkUserRole(user,3);
+		checkUser(sessionKey);
+		checkPermission(sessionKey,"r");
 		stop(sessionKey);
 		start(sessionKey);
 		
@@ -188,7 +165,7 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
 	public synchronized String status(String printer, long sessionKey) throws RemoteException, AuthException, DisabledException {
 		checkOnline();
 		String user = checkUser(sessionKey);
-		checkUserRole(user,2);
+		checkPermission(sessionKey,"su");
 		List<String[]> queue = printQueue.get(printer);
 		boolean runs = !queue.isEmpty();
 		int qSize = queue.size();
@@ -211,7 +188,7 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
 	public synchronized String readConfig(String parameter, long sessionKey) throws RemoteException, AuthException, DisabledException {
 		checkOnline();
 		String user = checkUser(sessionKey);
-		checkUserRole(user,2);
+		checkPermission(sessionKey,"rc");
 		String lEntry = user + "; readConfig; " + parameter;
 		log.add(lEntry);
 		return config.get(parameter);
@@ -221,7 +198,7 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
 	public synchronized String setConfig(String parameter, String value, long sessionKey) throws RemoteException, AuthException, DisabledException {
 		checkOnline();
 		String user = checkUser(sessionKey);
-		checkUserRole(user,2);
+		checkPermission(sessionKey,"sc");
 		config.put(parameter, value);
 		
 		String lEntry = user + "; setConfig; " + parameter + "; " + value;
@@ -232,6 +209,8 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
 	@Override
 	public synchronized String shutdown(long sessionKey) throws RemoteException, AuthException {
 		String user = checkUser(sessionKey);
+		//same permission as stop
+		checkPermission(sessionKey,"so");
 		shutdown = true;
 		
 		String lEntry = user + "; shutdown";
@@ -258,6 +237,7 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
 			
 			if(verifier.verify(username, "printer", sessionKey)) {
 				sessions.put(sessionKey, username);
+				permissions.put(sessionKey, verifier.getPermissions(sessionKey));
 			}else {
 				throw new AuthException("user was not verified by database");
 			}
@@ -273,7 +253,8 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
 	@Override
 	public synchronized List<String> getLog(long sessionKey) throws RemoteException, AuthException, DisabledException {
 		String user = checkUser(sessionKey);
-		checkUserRole(user,1);
+		//same permission as read config
+		checkPermission(sessionKey,"rc");
 		String lEntry = user + "; getLog";
 		log.add(lEntry);
 		return log;
@@ -282,7 +263,8 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
 	@Override
 	public synchronized void wipeLog(long sessionKey) throws RemoteException, AuthException, DisabledException {
 		String user = checkUser(sessionKey);
-		checkUserRole(user,1);
+		//same permission as set config
+		checkPermission(sessionKey,"sc");
 		log.clear();
 		String lEntry = user + "; wipeLog";
 		log.add(lEntry);

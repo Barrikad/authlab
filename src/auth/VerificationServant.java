@@ -118,7 +118,14 @@ public class VerificationServant extends UnicastRemoteObject implements Verifica
         }
 
         long key = random.nextLong();
-        String[] sessionVals = {username, serviceName};
+        
+        String permissions = "";
+		try {
+			permissions = databaseManager.getPermissions(username);
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+        String[] sessionVals = {username, serviceName, permissions};
         sessions.put(key, sessionVals);
         return key;
     }
@@ -133,6 +140,23 @@ public class VerificationServant extends UnicastRemoteObject implements Verifica
 	@Override
 	public void endSession(long sessionKey) throws RemoteException, AuthException {
 		sessions.remove(sessionKey);
+	}
+
+	@Override
+	public String[] getPermissions(long sessionKey) throws RemoteException, AuthException {
+		String[] session = sessions.get(sessionKey);
+		if(session == null) {
+			throw new AuthException("no session found");
+		}
+		String[] pers = session[2].split(";");
+		for(String str : pers) {
+			String[] temp = str.split(":");
+			//find service matching session
+			if(temp[0].equals(session[1])) {
+				return temp[1].split(",");
+			}
+		}
+		throw new AuthException("no permissions found!");
 	}
 
 }

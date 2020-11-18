@@ -128,4 +128,26 @@ public class DatabaseManager {
         stmt.close();
         conn.close();
     }
+    
+    public String getPermissions(String username) throws SQLException {
+    	PreparedStatement stmt = null;
+        ResultSet rst = null;
+        Connection conn = null;
+        String result = "";
+        
+        conn = DriverManager.getConnection(dbUrl, dbUser, dbPassword);
+
+        String query = " SELECT permissions FROM user_data WHERE username=?";
+        stmt = conn.prepareStatement(query);
+        stmt.setString(1, username);
+
+        rst = stmt.executeQuery();
+        rst.next();
+        result = rst.getString(1);
+        
+        rst.close();
+        stmt.close();
+        conn.close();
+        return result;
+    }
 }
