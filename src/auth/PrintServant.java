@@ -124,12 +124,23 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
 		Collections.swap(queue, 0, job);
 		return "Job swapped with job at position 0"; 
 	}
+	
+	private void startP() {
+		online = true;
+	}
+	private void stopP() {
+		online = false;
+		for(String printer : printQueue.keySet()) {
+			printQueue.get(printer).clear();
+		}
+	}
 
 	@Override
 	public synchronized String start(long sessionKey) throws RemoteException, AuthException{
 		String user = checkUser(sessionKey);
-		checkPermission(sessionKey,"a");
-		online = true;
+		checkPermission(sessionKey,"sa");
+		
+		startP();
 		
 		String lEntry = user + "; start";
 		log.add(lEntry);
@@ -140,10 +151,8 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
 	public synchronized String stop(long sessionKey) throws RemoteException, AuthException {
 		String user = checkUser(sessionKey);
 		checkPermission(sessionKey,"so");
-		online = false;
-		for(String printer : printQueue.keySet()) {
-			printQueue.get(printer).clear();
-		}
+		
+		stopP();
 		
 		String lEntry = user + "; stop";
 		log.add(lEntry);
@@ -152,11 +161,12 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
 
 	@Override
 	public synchronized String restart(long sessionKey) throws RemoteException, AuthException, DisabledException {
-		checkUser(sessionKey);
+		String user = checkUser(sessionKey);
 		checkPermission(sessionKey,"r");
-		stop(sessionKey);
-		start(sessionKey);
-		
+		stopP();
+		startP();
+		String lEntry = user + "; restart";
+		log.add(lEntry);
 		//accountability ensured by start and stop
 		return "Printer restarted";
 	}

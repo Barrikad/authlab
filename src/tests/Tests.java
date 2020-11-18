@@ -248,8 +248,7 @@ class Tests{
 							  "Alice; print; printer1; file2.txt",
 							  "Alice; topQueue; printer1; file2.txt",
 							  "Alice; start",
-							  "Alice; stop",
-							  "Alice; start"};
+							  "Alice; restart"};
 		
 		for(int i = 0; i < excpected.length; i++) {
 			assertEquals(excpected[i],log.get(i));
@@ -272,4 +271,33 @@ class Tests{
 		users[1].sessionKey = verifier.generateSession(users[1].name, users[1].password, serviceName);
 		printServer.login(users[1].name, users[1].sessionKey);
 	}
+	
+	@Test
+	void canFailPermission() {
+		assertThrows(AuthException.class, ()->
+			printServer.start(users[2].sessionKey)
+		);
+		assertThrows(AuthException.class, ()->
+			printServer.stop(users[2].sessionKey)
+		);
+		assertThrows(AuthException.class, ()->
+			printServer.restart(users[3].sessionKey)
+		);
+		assertThrows(AuthException.class, ()->
+			printServer.topQueue(printer1, 1, users[1].sessionKey)
+		);
+		assertThrows(AuthException.class, ()->
+			printServer.readConfig("secret",users[2].sessionKey)
+		);
+		assertThrows(AuthException.class, ()->
+			printServer.setConfig("secret","wrongvalue",users[2].sessionKey)
+		);
+		assertThrows(AuthException.class, ()->
+			printServer.abort(printer1,1,users[4].sessionKey)
+		);
+		assertThrows(AuthException.class, ()->
+			printServer.status(printer1,users[2].sessionKey)
+		);
+	}
+	
 }
