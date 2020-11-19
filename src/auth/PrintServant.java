@@ -171,7 +171,6 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
 		startP();
 		String lEntry = user + "; restart";
 		log.add(lEntry);
-		//accountability ensured by start and stop
 		return "Printer restarted";
 	}
 
@@ -223,7 +222,6 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
 	@Override
 	public synchronized String shutdown(long sessionKey) throws RemoteException, AuthException {
 		String user = checkUser(sessionKey);
-		//same permission as stop
 		checkPermissions(sessionKey,Permission.SHUTDOWN);
 		shutdown = true;
 		

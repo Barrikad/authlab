@@ -9,8 +9,11 @@ INSTRUCTIONS TO CREATE AND POPULATE DATABASE
    FLUSH PRIVILEGES;
    CREATE DATABASE auth;
    exit
-   (go to the directory where the populate is, authlab/resources)
-   mysql -u <username> -p<password> auth < populate.sql
+   (Linux)
+	   (go to the directory where the populate is, authlab/resources)
+	   mysql -u <username> -p<password> auth < populate.sql
+   (Windows)
+	   populate can be run as a script from the mysql workbench
 
 DEPENDENCIES
 	To run the project you will need JUnit 5 and the MySQL connector for java
