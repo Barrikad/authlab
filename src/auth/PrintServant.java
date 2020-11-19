@@ -171,7 +171,6 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
 		startP();
 		String lEntry = user + "; restart";
 		log.add(lEntry);
-		//accountability ensured by start and stop
 		return "Printer restarted";
 	}
 
