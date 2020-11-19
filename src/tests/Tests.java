@@ -15,6 +15,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
+import auth.enums.Role;
+import auth.enums.Service;
 import org.junit.jupiter.api.*;
 
 
@@ -29,7 +31,7 @@ class Tests{
 	private static final int userNumber = 7;
 	private User[] users = new User[userNumber];
 	private static final int portNumber = 2019;
-	private static final String serviceName = "printer";
+	private static final Service serviceName = Service.PRINTER;
 	private static final String vName = "verification";
 	private static final String file="file.txt";
 	private static final String file1="file1.txt";
@@ -40,10 +42,6 @@ class Tests{
 	private String[] job1 = new String[2];
 	private String[] job2 = new String[2];
 	private String[] job3 = new String[2];
-	private static final String[] adminR = {"p","q","tq","sa","so","a","r","su","rc","sc"};
-	private static final String[] techR = {"sa","so","r","su","rc","a","sc"};
-	private static final String[] powerR = {"p","q","tq","r","a"};
-	private static final String[] userR = {"p"};
 
 	@BeforeAll
 	void setUp() throws NotBoundException, IOException, InterruptedException, AuthException, ClassNotFoundException {
@@ -71,34 +69,23 @@ class Tests{
 			users[i].password = String.valueOf(pwGenerator.nextLong());
 		}
 
-		//ACL
-		//permissions not hardcoded but in a database
-		//its just that database is constructed from tests
-		users[0].permissions = adminR;
-		users[1].permissions = techR;
-		users[2].permissions = powerR;
-		users[3].permissions = userR;
-		users[4].permissions = userR;
-		users[5].permissions = userR;
-		users[6].permissions = userR;
-
 		//RBAC
-		users[0].role = "ADMIN";
-		users[1].role = "TECHNICIAN";
-		users[2].role = "POWER";
-		users[3].role = "ORDINARY";
-		users[4].role = "ORDINARY";
-		users[5].role = "ORDINARY";
-		users[6].role = "ORDINARY";
+		users[0].role = Role.ADMIN;
+		users[1].role = Role.TECHNICIAN;
+		users[2].role = Role.POWER;
+		users[3].role = Role.ORDINARY;
+		users[4].role = Role.ORDINARY;
+		users[5].role = Role.ORDINARY;
+		users[6].role = Role.ORDINARY;
 
 		//connect to printer
 		//assuming secured connection with signature from printer
 		registry = LocateRegistry.getRegistry(InetAddress.getLocalHost().getHostName(), portNumber);
-		printServer = (PrintService) registry.lookup(serviceName);
+		printServer = (PrintService) registry.lookup(serviceName.toString());
 
 		//connect to verifier
 		verifier = (VerificationService) registry.lookup(vName);
-		
+		printServer.shouldShutdown();
 		//register to verifier
 		//authenticate to verifier
 		//login to printer
@@ -116,8 +103,7 @@ class Tests{
 	
 	private class User{
 		public String name;
-		public String[] permissions;
-		public String role;
+		public Role role;
 		public String password;
 		public long sessionKey;
 	}
@@ -139,7 +125,7 @@ class Tests{
 		}
 		printServer.shutdown(users[0].sessionKey);
 		verifier.shutdown();
-		registry.unbind(serviceName);
+		registry.unbind(serviceName.toString());
 		registry.unbind(vName);
 	}
 

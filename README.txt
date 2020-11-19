@@ -1,4 +1,4 @@
-INSTRUCTIONS TO CREATE DATABASE
+INSTRUCTIONS TO CREATE AND POPULATE DATABASE
 
    Install MySQL
 
@@ -8,6 +8,9 @@ INSTRUCTIONS TO CREATE DATABASE
    GRANT ALL PRIVILEGES ON * . * TO '<username>'@'localhost';
    FLUSH PRIVILEGES;
    CREATE DATABASE auth;
+   exit
+   (go to the directory where the populate is, authlab/resources)
+   mysql -u <username> -p<password> auth < populate.sql
 
 DEPENDENCIES
 	To run the project you will need JUnit 5 and the MySQL connector for java

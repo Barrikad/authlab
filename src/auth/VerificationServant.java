@@ -1,5 +1,9 @@
 package auth;
 
+import auth.enums.Permission;
+import auth.enums.Role;
+import auth.enums.Service;
+
 import java.io.IOException;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
@@ -13,7 +17,7 @@ public class VerificationServant extends UnicastRemoteObject implements Verifica
     private static final long serialVersionUID = 8868835734121491443L;
     private boolean shutdown = false;
     private Map<Long, String[]> sessions;
-    private Map<String, List<String>> roles;
+    private Map<Role, Map<Permission, Service>> roles;
     private MessageDigest hasher;
     private SecureRandom random;
     private DatabaseManager databaseManager;
@@ -25,13 +29,13 @@ public class VerificationServant extends UnicastRemoteObject implements Verifica
         random = new SecureRandom();
         databaseManager = new DatabaseManager();
         roles=databaseManager.getRoles();
-        for(Map.Entry<String,List<String>> entry: roles.entrySet()){
-            System.out.println(entry.getKey()+':');
-            for(String x:entry.getValue())
-                System.out.println(x);
-            System.out.println();
-            System.out.println();
-        }
+//        for(Map.Entry<Role,Map<Permission, Service>> entry: roles.entrySet()){
+//            System.out.println(entry.getKey().toString()+':');
+//            for(Map.Entry<Permission,Service> x: entry.getValue().entrySet())
+//                System.out.println(x.getKey().toString());
+//            System.out.println();
+//            System.out.println();
+//        }
        
     }
 
@@ -118,28 +122,29 @@ public class VerificationServant extends UnicastRemoteObject implements Verifica
     }
 
     @Override
-    public synchronized long generateSession(String username, String password, String serviceName) throws RemoteException, AuthException {
+    public synchronized long generateSession(String username, String password, Service serviceName) throws RemoteException, AuthException {
+        boolean x=!validLogin(username, password);
         if (!validLogin(username, password)) {
             throw new AuthException("Username or password not valid");
         }
 
         long key = random.nextLong();
         
-//        String permissions = "";
-//		try {
-//			permissions = databaseManager.getPermissions(username);
-//		} catch (SQLException e) {
-//			e.printStackTrace();
-//		}
-        String[] sessionVals = {username, serviceName};
+        Role role = null;
+		try {
+			role = databaseManager.getUserRole(username,serviceName);
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+        String[] sessionVals = {username, role.toString(), serviceName.toString()};
         sessions.put(key, sessionVals);
         return key;
     }
 
     @Override
-    public synchronized boolean verify(String username, String serviceName, long sessionKey) throws RemoteException, AuthException {
+    public synchronized boolean verify(String username, Service serviceName, long sessionKey) throws RemoteException, AuthException {
         String[] session = sessions.get(sessionKey);
-        return session != null && session[0].equals(username) && session[1].equals(serviceName);
+        return session != null && session[0].equals(username) && session[2].equals(serviceName.toString());
 
     }
 
@@ -148,20 +153,21 @@ public class VerificationServant extends UnicastRemoteObject implements Verifica
 		sessions.remove(sessionKey);
 	}
 
-//	@Override
-//	public String[] getPermissions(long sessionKey) throws RemoteException, AuthException {
-//		String[] session = sessions.get(sessionKey);
-//		if(session == null) {
-//			throw new AuthException("no session found");
-//		}
-//		String[] pers = session[2].split(";");
-//		for(String str : pers) {
-//			String[] temp = str.split(":");
-//			//find service matching session
-//			if(temp[0].equals(session[1])) {
-//				return temp[1].split(",");
-//			}
-//		}
-//		throw new AuthException("no permissions found!");
-//	}
+	@Override
+	public List<Permission> getPermissions(long sessionKey) throws RemoteException, AuthException {
+		String[] session = sessions.get(sessionKey);
+		if(session == null) {
+			throw new AuthException("no session found");
+		}
+        List<Permission> result = new ArrayList<>();
+        for(Map.Entry<Permission,Service> entry: roles.get(Role.valueOf(session[1])).entrySet()){
+            if(entry.getValue().toString().equals(session[2]))
+                result.add(entry.getKey());
+        }
+
+		if (result.isEmpty())
+            throw new AuthException("no permissions found!");
+		else
+		    return result;
+	}
 }

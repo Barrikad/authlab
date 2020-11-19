@@ -8,7 +8,7 @@ import java.rmi.server.UnicastRemoteObject;
 
 public class PrintServer implements Runnable {
 	private final static int portNumber = 2019;
-	private final static String name = "printer";
+	private final static String name = "PRINTER";
 
 	public static void main(String[] args) throws Exception {
 		PrintServant printServant = new PrintServant();

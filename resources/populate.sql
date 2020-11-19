@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS user_data(username varchar(30),password varbinary(500
 CREATE TABLE user_role(username varchar(30),role_id integer);
 CREATE TABLE role_data(role_id integer,role_title varchar(30),parent_id integer);
 CREATE TABLE role_permission(role_id integer,permission_id integer);
-CREATE TABLE permission_data(permission_id integer,device varchar(30),operation varchar(30));
+CREATE TABLE permission_data(permission_id integer,service varchar(30),permission varchar(30));
 
 INSERT INTO role_data (role_id, role_title, parent_id)
 VALUES (1, 'ADMIN', null),
@@ -13,20 +13,20 @@ VALUES (1, 'ADMIN', null),
         (4,'ORDINARY',3);
 
 
-INSERT INTO permission_data (permission_id, device, operation)
-VALUES (1,'printer','PRINT'), /*Ordinary*/
-        (2,'printer','ABORT'), /*Admin*/
-        (3,'printer','QUEUE'), /*Ordinary*/
-        (4,'printer','TOPQUEUE'), /*Power*/
-        (5,'printer','START'), /*Technician*/
-        (6,'printer','STOP'), /*Technician*/
-        (7,'printer','RESTART'), /*Technician*/
-        (8,'printer','STATUS'), /*Technician*/
-        (9,'printer','READCONFIG'), /*Technician*/
-        (10,'printer','SETCONFIG'), /*Technician*/
-        (11,'printer','SHUTDOWN'), /*Admin*/
-        (12,'printer','GETLOG'), /*Admin*/
-        (13,'printer','WIPELOG'); /*Admin*/
+INSERT INTO permission_data (permission_id, service, permission)
+VALUES (1,'PRINTER','PRINT'), /*Ordinary*/
+        (2,'PRINTER','ABORT'), /*Admin*/
+        (3,'PRINTER','QUEUE'), /*Ordinary*/
+        (4,'PRINTER','TOPQUEUE'), /*Power*/
+        (5,'PRINTER','START'), /*Technician*/
+        (6,'PRINTER','STOP'), /*Technician*/
+        (7,'PRINTER','RESTART'), /*Technician*/
+        (8,'PRINTER','STATUS'), /*Technician*/
+        (9,'PRINTER','READCONFIG'), /*Technician*/
+        (10,'PRINTER','SETCONFIG'), /*Technician*/
+        (11,'PRINTER','SHUTDOWN'), /*Admin*/
+        (12,'PRINTER','GETLOG'), /*Admin*/
+        (13,'PRINTER','WIPELOG'); /*Admin*/
 
 INSERT INTO role_permission (role_id, permission_id)
 VALUES
