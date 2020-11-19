@@ -30,7 +30,7 @@ public class DatabaseManager {
             if (this == o) return true;
             if (!(o instanceof DBData)) return false;
             DBData dbData = (DBData) o;
-            return role_id.equals(dbData.role_id);
+            return role_id.equals(dbData.role_id) && parent_id.equals(dbData.parent_id);
         }
 
         @Override

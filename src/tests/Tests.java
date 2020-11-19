@@ -19,10 +19,6 @@ import auth.enums.Role;
 import auth.enums.Service;
 import org.junit.jupiter.api.*;
 
-
-
-
-
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class Tests{
 	private PrintService printServer;
@@ -45,13 +41,6 @@ class Tests{
 
 	@BeforeAll
 	void setUp() throws NotBoundException, IOException, InterruptedException, AuthException, ClassNotFoundException {
-
-		/*
-		Runtime runtime = Runtime.getRuntime();
-		Process serverProcess = runtime.exec("java -classpath " + this.projectLocation + " " + this.printerClass);
-		Thread.sleep(2000);
-		Process verificationProcess = runtime.exec("java -classpath " + this.projectLocation + " " + this.verificationClass);
-		Thread.sleep(2000);*/
 
 		Thread printThread = new Thread(new PrintServer());
 		Thread veriThread = new Thread(new VerificationServer());
