@@ -21,7 +21,7 @@ public class VerificationServant extends UnicastRemoteObject implements Verifica
     private MessageDigest hasher;
     private SecureRandom random;
     private DatabaseManager databaseManager;
-
+    
     public VerificationServant() throws IOException, NoSuchAlgorithmException, ClassNotFoundException, SQLException {
         super();
         sessions = new HashMap<>();
@@ -123,7 +123,6 @@ public class VerificationServant extends UnicastRemoteObject implements Verifica
 
     @Override
     public synchronized long generateSession(String username, String password, Service serviceName) throws RemoteException, AuthException {
-        boolean x=!validLogin(username, password);
         if (!validLogin(username, password)) {
             throw new AuthException("Username or password not valid");
         }

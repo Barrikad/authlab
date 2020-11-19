@@ -222,7 +222,6 @@ public class PrintServant extends UnicastRemoteObject implements PrintService {
 	@Override
 	public synchronized String shutdown(long sessionKey) throws RemoteException, AuthException {
 		String user = checkUser(sessionKey);
-		//same permission as stop
 		checkPermissions(sessionKey,Permission.SHUTDOWN);
 		shutdown = true;
 		
