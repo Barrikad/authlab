@@ -10,7 +10,8 @@ INSERT INTO role_data (role_id, role_title, parent_id)
 VALUES (1, 'ADMIN', null),
         (2,'TECHNICIAN',1),
         (3,'POWER',1),
-        (4,'ORDINARY',3);
+        (4,'ORDINARY',3),
+       (4,'ORDINARY',2);
 
 
 INSERT INTO permission_data (permission_id, service, permission)
