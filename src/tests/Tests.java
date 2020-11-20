@@ -43,7 +43,7 @@ class Tests{
 	private static final String[] adminR = {"p","q","tq","sa","so","a","r","su","rc","sc"};
 	private static final String[] techR = {"sa","so","r","su","rc","a","sc"};
 	private static final String[] powerR = {"p","q","tq","r","a"};
-	private static final String[] userR = {"p"};
+	private static final String[] userR = {"p","q"};
 
 	@BeforeAll
 	void setUp() throws NotBoundException, IOException, InterruptedException, AuthException, ClassNotFoundException {
@@ -61,6 +61,7 @@ class Tests{
 		Thread.sleep(1000);
 		veriThread.start();
 		Thread.sleep(1000);
+
 		
 		//create users
 		Random pwGenerator = new Random();
@@ -79,7 +80,7 @@ class Tests{
 		users[4].permissions = userR;
 		users[5].permissions = userR;
 		users[6].permissions = userR;
-		
+	
 		//connect to printer
 		//assuming secured connection with signature from printer
 		registry = LocateRegistry.getRegistry(InetAddress.getLocalHost().getHostName(), portNumber);
@@ -122,9 +123,11 @@ class Tests{
 
 	@AfterAll
 	void tearDown() throws AuthException, RemoteException, NotBoundException {
+		
 		for(User user : users) {
 			verifier.unsetValues(user.name);
 		}
+		
 		printServer.shutdown(users[0].sessionKey);
 		verifier.shutdown();
 		registry.unbind(serviceName);
@@ -293,7 +296,7 @@ class Tests{
 			printServer.setConfig("secret","wrongvalue",users[2].sessionKey)
 		);
 		assertThrows(AuthException.class, ()->
-			printServer.abort(printer1,1,users[4].sessionKey)
+			printServer.abort(printer1,1,users[3].sessionKey)
 		);
 		assertThrows(AuthException.class, ()->
 			printServer.status(printer1,users[2].sessionKey)
